@@ -1,25 +1,7 @@
-// ThumbTabs v0.4
-// Created by Thomas Bassetto (http://tb4.fr)
+// stockit v0.1
+// Created by kmdsbng, yaotti
 //
-// New in 0.4 :
-//  - Jetpack 0.6 compatibility
-//  - Prepare the code for settings
-//
-// New in 0.3 :
-//  - Jetpack 0.5 compatibility
-//  - Effects removed, too buggy
-//
-// The Original Code is the Quicktab Jetpack feature.
-// http://people.mozilla.com/~adw/jetpacks/quicktab/
-// 
-// The Initial Developer of the Original Code is
-//  * Drew Willcoxon <adw@mozilla.com>
-// Portions created by the Initial Developer are Copyright (C) 2009
-// the Initial Developer. All Rights Reserved.
-// 
-// Contributor(s):
-//  * Sean Martell (Quicktab icon) <http://www.seanmartell.com/>
-// Quicktab: http://people.mozilla.com/~adw/jetpacks/quicktab/
+// stock pages to local storage
 
 const SLIDEBAR_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/icon.png";
 const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
