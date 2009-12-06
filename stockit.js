@@ -10,18 +10,43 @@ var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 
 var addSlide, clearSlide;
 
+function stockIt() {
+  if (!stockList.urllist) stockList.urllist = [];
+  var exists = false;
+  var url = jetpack.tabs.focused.url;
+  stockList.urllist.forEach(function(st){
+      exists = exists || (st.url == url);
+  })
+  if (exists) return;
+  var stock = {
+      url : url,
+      title: $('title', jetpack.tabs.focused.contentDocument).text()
+  };
+  stockList.urllist.push(stock);
+  addSlide(jetpack.tabs.focused);
+}
+
+jetpack.future.import('menu');
+jetpack.menu.context.page.add({
+  label: 'StockIt',
+  command: function () {
+             stockIt();
+           }
+});
+
 jetpack.statusBar.append({
     html: "StockIt",
     width: 45,
     onReady: function(widget) {
         $(widget).click(function(){
+          stockIt();
+          /*
             if (!stockList.urllist) stockList.urllist = [];
             var exists = false;
             var url = jetpack.tabs.focused.url;
             stockList.urllist.forEach(function(st){
                 exists = exists || (st.url == url);
             })
-            //notify(stockList.urllist);
             if (exists) return;
             var stock = {
                 url : url,
@@ -29,6 +54,7 @@ jetpack.statusBar.append({
             };
             stockList.urllist.push(stock);
             addSlide(jetpack.tabs.focused);
+            */
         });
     }
 });
