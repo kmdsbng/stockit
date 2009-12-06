@@ -176,9 +176,7 @@ jetpack.slideBar.append({
             closeIcon.attr("src", CLOSE_TAB_ICON);
             closeIcon.addClass("closeButton");
             closeIcon.click(function () {
-                notify('close');
                 removeStorage(url);
-                notify('close2');
                 removeSlideByURL(url);
                 /*
                 var index = isURLOpened(url);
