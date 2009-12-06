@@ -44,6 +44,17 @@ jetpack.statusBar.append({
     }
 });
 
+function removeStorage(url) {
+  if (!stockList.urllist)
+    return;
+  var result = []
+  for (var i=0; i < stockList.urllist.length; i++) {
+    var item = stockList.urllist[i];
+    if (item.url != url)
+      result.push(item);
+  }
+  stockList.urllist = result;
+}
 
 const SLIDEBAR_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/icon.png";
 const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
@@ -109,7 +120,10 @@ jetpack.slideBar.append({
           var closeIcon = $("<img />", slide.contentDocument.body);
           closeIcon.attr("src", CLOSE_TAB_ICON);
           closeIcon.addClass("closeButton");
-          closeIcon.click(function () tab.close());
+          closeIcon.click(function () {
+              removeStorage(tab.url);
+              removeSlide(tab);
+          });
           headerBar.append(closeIcon);
 
         var tabPreview = slide.contentDocument.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -132,6 +146,17 @@ jetpack.slideBar.append({
       tabWidgets.splice(tabIndex, 1);
       tabs.splice(tabIndex, 1);
       /*tabWidget.slideUp('normal').fadeOut('normal', function () tabWidget.remove());*/
+      tabWidget.remove()
+    }
+
+    function removeSlide(tab) {
+      var tabIndex = getTabIndex(tab);
+      var tabWidget = tabWidgets[tabIndex];
+      if (tabWidget.hasClass("focused")) {
+        tabWidget.addClass("focusedClosing");
+      }
+      tabWidgets.splice(tabIndex, 1);
+      tabs.splice(tabIndex, 1);
       tabWidget.remove()
     }
 
