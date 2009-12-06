@@ -107,17 +107,24 @@ jetpack.slideBar.append({
           return makeTabWidgetInner(item.url, item.title);
         }
 
+        function isURLOpened(url) {
+            for (var i = 0; i < jetpack.tabs.length; i++)
+                if (jetpack.tabs[i].url == url) return i
+            return null;
+        }
+
         function makeTabWidgetInner(url, titleText, tab) {
             var tabWidget = $("<div />", slide.contentDocument.body);
             tabWidget.addClass("tab");
-            tabWidget.click(function(){
-                //if (isOpened(url)) {
-                //  if (!$(event.target).hasClass("closeButton")) {
-                //    //findTab(url).focus();
-                //  }
-                //} else {
+            tabWidget.click(function(event){
+                var index = isURLOpened(url)
+                if (index) {
+                    if (!$(event.target).hasClass("closeButton")) {
+                        jetpack.tabs[index].focus();
+                    }
+                } else {
                   jetpack.tabs.open(url).focus();
-                //}
+                }
             })
 
 
