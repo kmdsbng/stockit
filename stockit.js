@@ -100,10 +100,24 @@ jetpack.slideBar.append({
         }
 
         function makeTabWidget(tab) {
+          return makeTabWidgetInner(tab.url, getTabTitle(tab), tab);
+        }
+
+        function makeTabWidgetByStorageItem(item) {
+          return makeTabWidgetInner(item.url, item.title);
+        }
+
+        function makeTabWidgetInner(url, titleText, tab) {
             var tabWidget = $("<div />", slide.contentDocument.body);
             tabWidget.addClass("tab");
             tabWidget.click(function(){
-                jetpack.tabs.open(tab.url).focus();
+                //if (isOpened(url)) {
+                //  if (!$(event.target).hasClass("closeButton")) {
+                //    //findTab(url).focus();
+                //  }
+                //} else {
+                  jetpack.tabs.open(url).focus();
+                //}
             })
 
 
@@ -111,14 +125,16 @@ jetpack.slideBar.append({
             headerBar.addClass("headerBar");
             tabWidget.append(headerBar);
 
-            var favicon = $("<img />", slide.contentDocument.body);
-            favicon.attr("src", getTabFavicon(tab));
-            favicon.addClass("favicon");
-            headerBar.append(favicon);
+            if (tab != null) {
+              var favicon = $("<img />", slide.contentDocument.body);
+              favicon.attr("src", getTabFavicon(tab));
+              favicon.addClass("favicon");
+              headerBar.append(favicon);
+            }
 
             var title = $("<div />", slide.contentDocument.body);
             title.addClass("title");
-            title.text(getTabTitle(tab));
+            title.text(titleText);
             headerBar.append(title);
 
             var closeIcon = $("<img />", slide.contentDocument.body);
@@ -221,6 +237,21 @@ jetpack.slideBar.append({
         $("#newtab", slide.contentDocument.body).click(function (event) {
             jetpack.tabs.open("about:blank").focus();
         });
+
+        function resumeSlide() {
+          for (var i=0; i < stockList.urllist.length; i++) {
+            var item = stockList.urllist[i];
+            var tabWidget = makeTabWidgetByStorageItem(item);
+            tabWidgets.push(tabWidget);
+            //tabs.push(tab);
+            tabWidget.appendTo($("#tabList", slide.contentDocument.body));
+            tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+            /*$(slide.contentDocument.body).scrollTop(tabWidget.offset().top);*/
+            //updateTabPreview(tab);
+          }
+        }
+        resumeSlide();
+        //jetpack.tabs.forEach(function (tab) onTabOpened(tab));
     },
     icon: SLIDEBAR_ICON,
     width: 250,
