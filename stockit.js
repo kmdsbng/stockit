@@ -104,6 +104,7 @@ jetpack.slideBar.append({
             return tabs.indexOf(tab);
         }
 
+
         function getTabFavicon(tab) {
             var favicon = tab.favicon || DEFAULT_FAVICON;
             return /^chrome:/.test(favicon) ? DEFAULT_FAVICON : favicon;
@@ -141,6 +142,7 @@ jetpack.slideBar.append({
 
         function makeTabWidgetInner(url, titleText, tab) {
             var tabWidget = $("<div />", slide.contentDocument.body);
+            tabWidget.attr('url', url);
             tabWidget.addClass("tab");
             tabWidget.click(function(event){
                 var index = isURLOpened(url)
@@ -174,8 +176,15 @@ jetpack.slideBar.append({
             closeIcon.attr("src", CLOSE_TAB_ICON);
             closeIcon.addClass("closeButton");
             closeIcon.click(function () {
-                removeStorage(tab.url);
-                removeSlide(tab);
+                notify('close');
+                removeStorage(url);
+                notify('close2');
+                removeSlideByURL(url);
+                /*
+                var index = isURLOpened(url);
+                if (index >= 0)
+                  removeSlide(tabs[index]);
+                  */
             });
             headerBar.append(closeIcon);
 
@@ -211,6 +220,28 @@ jetpack.slideBar.append({
             tabWidgets.splice(tabIndex, 1);
             tabs.splice(tabIndex, 1);
             tabWidget.remove()
+        }
+
+
+        function removeSlideByURL(url) {
+            var tabIndex = findTabWidgetByUrl(url);
+            if (tabIndex < 0)
+              return;
+            var tabWidget = tabWidgets[tabIndex];
+            if (tabWidget.hasClass("focused")) {
+                tabWidget.addClass("focusedClosing");
+            }
+            tabWidgets.splice(tabIndex, 1);
+            //tabs.splice(tabIndex, 1);
+            tabWidget.remove()
+        }
+
+        function findTabWidgetByUrl(url) {
+          for (var i=0; i < tabWidgets.length; i++) {
+            if (tabWidgets[i].attr('url') == url)
+              return i;
+          }
+          return -1;
         }
 
         function onTabFocused(tab) {
