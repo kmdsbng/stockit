@@ -17,15 +17,25 @@ jetpack.statusBar.append({
             var exists = false;
             var url = jetpack.tabs.focused.url;
             stockList.urllist.forEach(function(st){
-                exists = exists || (st.url == url);
+              exists = exists || (st.url == url);
             })
-            notify(stockList.urllist);
+            //notify(stockList.urllist);
             if (exists) return;
             var stock = {
                 url : url,
                 title: $('title', jetpack.tabs.focused.contentDocument).text()
             };
             stockList.urllist.push(stock);
+        });
+    }
+});
+
+jetpack.statusBar.append({
+    html: "clear",
+    width: 45,
+    onReady: function(widget) {
+        $(widget).click(function(){
+          stockList.urllist = [];
         });
     }
 });
