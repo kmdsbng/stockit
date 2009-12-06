@@ -8,7 +8,7 @@ jetpack.future.import("storage.simple");
 var stockList = jetpack.storage.simple;
 var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 
-var addSlide;
+var addSlide, clearSlide;
     
 jetpack.statusBar.append({
     html: "StockIt",
@@ -38,7 +38,8 @@ jetpack.statusBar.append({
     width: 45,
     onReady: function(widget) {
         $(widget).click(function(){
-          stockList.urllist = [];
+            stockList.urllist = [];
+            clearSlide();
         });
     }
 });
@@ -165,6 +166,12 @@ jetpack.slideBar.append({
     var tabs = []
     var tabWidgets = [];
 
+    clearSlide = function() {
+        for (var i = 0; i < tabWidgets.length; i++) {
+            tabWidgets[i].remove();
+        }
+        tabWidgets = [];
+    }
     /*
     jetpack.tabs.forEach(function (tab) onTabOpened(tab));
     onTabFocused(jetpack.tabs.focused);
