@@ -102,6 +102,10 @@ jetpack.slideBar.append({
         function makeTabWidget(tab) {
             var tabWidget = $("<div />", slide.contentDocument.body);
             tabWidget.addClass("tab");
+            tabWidget.click(function(){
+                jetpack.tabs.open(tab.url).focus();
+            })
+
 
             var headerBar = $("<div />", slide.contentDocument.body);
             headerBar.addClass("headerBar");
@@ -288,7 +292,7 @@ jetpack.slideBar.append({
             }
         ]]></style>
         <body>
-        <div id="tabList">src="" /></div>
+        <div id="tabList"></div>
         </body>
         </>
 });
