@@ -136,7 +136,7 @@ jetpack.slideBar.append({
         function isURLOpened(url) {
             for (var i = 0; i < jetpack.tabs.length; i++)
                 if (jetpack.tabs[i].url == url) return i
-            return null;
+            return -1;
         }
 
         function makeTabWidgetInner(url, titleText, tab) {
@@ -144,7 +144,7 @@ jetpack.slideBar.append({
             tabWidget.addClass("tab");
             tabWidget.click(function(event){
                 var index = isURLOpened(url)
-                if (index) {
+                if (index >= 0) {
                     if (!$(event.target).hasClass("closeButton")) {
                         jetpack.tabs[index].focus();
                     }
