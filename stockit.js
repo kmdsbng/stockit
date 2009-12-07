@@ -27,10 +27,7 @@ function stockIt() {
     })
     if (exists) return;
     var title = $('title', jetpack.tabs.focused.contentDocument).text();
-    if (title.length > 30) {
-        title = tabTitle.substr(0, 25);
-        title += "...";
-    }
+    if (title.length > 30) title = title.substr(0, 25) + "...";
     var stock = {url : url, title: title};
     stockList.urllist.push(stock);
     addSlide(jetpack.tabs.focused);
