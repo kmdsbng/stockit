@@ -43,25 +43,17 @@ jetpack.menu.context.page.add({
 });
 
 jetpack.statusBar.append({
-    html: '<button>StockIt!(<span id="stock-count">'+stockList.urllist.length+'</span>)</button>',
-    width: 80,
+    html: '<button id="add-stock">StockIt!(<span id="stock-count">'+stockList.urllist.length+'</span>)</button><button id="clear-stock">clear</button>',
+    width: 130,
     onReady: function(widget) {
-        var self = this;
-        $(widget).click(function(){
+        $("#add-stock", widget).click(function(){
             stockIt();
             $("#stock-count", widget).text(stockList.urllist.length);
         });
-    }
-});
-
-jetpack.statusBar.append({
-    html: "<button>clear</button>",
-    width: 45,
-    onReady: function(widget) {
-        $(widget).click(function(){
+        $("#clear-stock", widget).click(function(){
             stockList.urllist = [];
             clearSlide();
-            //$("#stock-count", widget).text("0");
+            $("#stock-count", widget).text("0");
         });
     }
 });
