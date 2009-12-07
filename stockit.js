@@ -19,41 +19,41 @@ var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 var addSlide, clearSlide;
 
 function stockIt() {
-  if (!stockList.urllist) stockList.urllist = [];
-  var exists = false;
-  var url = jetpack.tabs.focused.url;
-  stockList.urllist.forEach(function(st){
-      exists = exists || (st.url == url);
-  })
-  if (exists) return;
-  var stock = {
-      url : url,
-      title: $('title', jetpack.tabs.focused.contentDocument).text()
-  };
-  stockList.urllist.push(stock);
-  addSlide(jetpack.tabs.focused);
+    if (!stockList.urllist) stockList.urllist = [];
+    var exists = false;
+    var url = jetpack.tabs.focused.url;
+    stockList.urllist.forEach(function(st){
+        exists = exists || (st.url == url);
+    })
+    if (exists) return;
+    var stock = {
+        url : url,
+        title: $('title', jetpack.tabs.focused.contentDocument).text()
+    };
+    stockList.urllist.push(stock);
+    addSlide(jetpack.tabs.focused);
 }
 
 jetpack.future.import('menu');
 jetpack.menu.context.page.add({
-  label: 'StockIt',
-  command: function () {
-             stockIt();
-           }
+    label: 'StockIt',
+    command: function () {
+        stockIt();
+    }
 });
 
 jetpack.statusBar.append({
-    html: "StockIt",
-    width: 45,
+    html: "<button>StockIt!</button>",
+    width: 60,
     onReady: function(widget) {
         $(widget).click(function(){
-          stockIt();
+            stockIt();
         });
     }
 });
 
 jetpack.statusBar.append({
-    html: "clear",
+    html: "<button>clear</button>",
     width: 45,
     onReady: function(widget) {
         $(widget).click(function(){
@@ -114,11 +114,11 @@ jetpack.slideBar.append({
         }
 
         function makeTabWidget(tab) {
-          return makeTabWidgetInner(tab.url, getTabTitle(tab), tab);
+            return makeTabWidgetInner(tab.url, getTabTitle(tab), tab);
         }
 
         function makeTabWidgetByStorageItem(item) {
-          return makeTabWidgetInner(item.url, item.title);
+            return makeTabWidgetInner(item.url, item.title);
         }
 
         function isURLOpened(url) {
@@ -138,7 +138,7 @@ jetpack.slideBar.append({
                         jetpack.tabs[index].focus();
                     }
                 } else {
-                  jetpack.tabs.open(url).focus();
+                    jetpack.tabs.open(url).focus();
                 }
             })
 
@@ -148,10 +148,10 @@ jetpack.slideBar.append({
             tabWidget.append(headerBar);
 
             if (tab != null) {
-              var favicon = $("<img />", slide.contentDocument.body);
-              favicon.attr("src", getTabFavicon(tab));
-              favicon.addClass("favicon");
-              headerBar.append(favicon);
+                var favicon = $("<img />", slide.contentDocument.body);
+                favicon.attr("src", getTabFavicon(tab));
+                favicon.addClass("favicon");
+                headerBar.append(favicon);
             }
 
             var title = $("<div />", slide.contentDocument.body);
@@ -187,7 +187,6 @@ jetpack.slideBar.append({
             }
             tabWidgets.splice(tabIndex, 1);
             tabs.splice(tabIndex, 1);
-            /*tabWidget.slideUp('normal').fadeOut('normal', function () tabWidget.remove());*/
             tabWidget.remove()
         }
 
@@ -206,7 +205,7 @@ jetpack.slideBar.append({
         function removeSlideByURL(url) {
             var tabIndex = findTabWidgetByUrl(url);
             if (tabIndex < 0)
-              return;
+                return;
             var tabWidget = tabWidgets[tabIndex];
             if (tabWidget.hasClass("focused")) {
                 tabWidget.addClass("focusedClosing");
@@ -217,11 +216,11 @@ jetpack.slideBar.append({
         }
 
         function findTabWidgetByUrl(url) {
-          for (var i=0; i < tabWidgets.length; i++) {
-            if (tabWidgets[i].attr('url') == url)
-              return i;
-          }
-          return -1;
+            for (var i=0; i < tabWidgets.length; i++) {
+                if (tabWidgets[i].attr('url') == url)
+                    return i;
+            }
+            return -1;
         }
 
         function onTabFocused(tab) {
@@ -236,7 +235,6 @@ jetpack.slideBar.append({
             tabs.push(tab);
             tabWidget.appendTo($("#tabList", slide.contentDocument.body));
             tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            /*$(slide.contentDocument.body).scrollTop(tabWidget.offset().top);*/
             updateTabPreview(tab);
         }
 
@@ -261,18 +259,6 @@ jetpack.slideBar.append({
             }
             tabWidgets = [];
         }
-        /*
-    jetpack.tabs.forEach(function (tab) onTabOpened(tab));
-    onTabFocused(jetpack.tabs.focused);
-    */
-
-        /*
-    jetpack.tabs.onClose(function () onTabClosed(this));
-    jetpack.tabs.onFocus(function () onTabFocused(this));
-    jetpack.tabs.onOpen(function () onTabOpened(this));
-    jetpack.tabs.onReady(function () onTabReady(this));
-    */
-
         $(slide.contentDocument).dblclick(function (event) {
             if (event.target.localName === "HTML")
                 jetpack.tabs.open("about:blank").focus();
@@ -283,19 +269,15 @@ jetpack.slideBar.append({
         });
 
         function resumeSlide() {
-          for (var i=0; i < stockList.urllist.length; i++) {
-            var item = stockList.urllist[i];
-            var tabWidget = makeTabWidgetByStorageItem(item);
-            tabWidgets.push(tabWidget);
-            //tabs.push(tab);
-            tabWidget.appendTo($("#tabList", slide.contentDocument.body));
-            tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            /*$(slide.contentDocument.body).scrollTop(tabWidget.offset().top);*/
-            //updateTabPreview(tab);
-          }
+            for (var i=0; i < stockList.urllist.length; i++) {
+                var item = stockList.urllist[i];
+                var tabWidget = makeTabWidgetByStorageItem(item);
+                tabWidgets.push(tabWidget);
+                tabWidget.appendTo($("#tabList", slide.contentDocument.body));
+                tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+            }
         }
         resumeSlide();
-        //jetpack.tabs.forEach(function (tab) onTabOpened(tab));
     },
     icon: SLIDEBAR_ICON,
     width: 250,
