@@ -42,8 +42,8 @@ jetpack.menu.context.page.add({
 });
 
 jetpack.statusBar.append({
-    html: "<button>StockIt!</button>",
-    width: 60,
+    html: "<button>StockIt!("+stockList.urllist.length+")</button>",
+    width: 80,
     onReady: function(widget) {
         $(widget).click(function(){
             stockIt();
