@@ -3,6 +3,14 @@
 //
 // stock pages to local storage
 
+var manifest = {
+    settings: [
+        {id:"ratio", type:"range", label:"Ratio", min: 30, max: 100, default: 50 },
+        {id:"thumbnails", type:"boolean", label:"Thumbnails?", default: true }
+    ]
+};
+
+jetpack.future.import("storage.settings");
 jetpack.future.import("storage.simple");
 
 var stockList = jetpack.storage.simple;
@@ -40,21 +48,6 @@ jetpack.statusBar.append({
     onReady: function(widget) {
         $(widget).click(function(){
           stockIt();
-          /*
-            if (!stockList.urllist) stockList.urllist = [];
-            var exists = false;
-            var url = jetpack.tabs.focused.url;
-            stockList.urllist.forEach(function(st){
-                exists = exists || (st.url == url);
-            })
-            if (exists) return;
-            var stock = {
-                url : url,
-                title: $('title', jetpack.tabs.focused.contentDocument).text()
-            };
-            stockList.urllist.push(stock);
-            addSlide(jetpack.tabs.focused);
-            */
         });
     }
 });
@@ -88,12 +81,6 @@ const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
 const NEW_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/new_tab.png";
 const PREF_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/pref.png";
 
-var manifest = {
-    settings: [
-        {id:"ratio", type:"range", label:"Ratio", min: 30, max: 100, default: 50 },
-        {id:"thumbnails", type:"boolean", label:"Thumbnails?", default: true }
-    ]
-};
 
 jetpack.future.import("slideBar");
 jetpack.future.import("storage.settings");
@@ -178,11 +165,6 @@ jetpack.slideBar.append({
             closeIcon.click(function () {
                 removeStorage(url);
                 removeSlideByURL(url);
-                /*
-                var index = isURLOpened(url);
-                if (index >= 0)
-                  removeSlide(tabs[index]);
-                  */
             });
             headerBar.append(closeIcon);
 
@@ -385,6 +367,7 @@ jetpack.slideBar.append({
             }
         ]]></style>
         <body>
+        <h2>Stack URL List</h2>
         <div id="tabList"></div>
         </body>
         </>
