@@ -26,10 +26,12 @@ function stockIt() {
         exists = exists || (st.url == url);
     })
     if (exists) return;
-    var stock = {
-        url : url,
-        title: $('title', jetpack.tabs.focused.contentDocument).text()
-    };
+    title = $('title', jetpack.tabs.focused.contentDocument).text();
+    if (title.length > 30) {
+        title = tabTitle.substr(0, 25);
+        title += "...";
+    }
+    var stock = {url : url, title: title};
     stockList.urllist.push(stock);
     addSlide(jetpack.tabs.focused);
 }
