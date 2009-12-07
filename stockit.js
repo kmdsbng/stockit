@@ -38,15 +38,18 @@ jetpack.menu.context.page.add({
     label: 'StockIt',
     command: function () {
         stockIt();
+        //$("#stock-count", jetpack.tabs.focused).text(stockList.urllist.length);
     }
 });
 
 jetpack.statusBar.append({
-    html: "<button>StockIt!("+stockList.urllist.length+")</button>",
+    html: '<button>StockIt!(<span id="stock-count">'+stockList.urllist.length+'</span>)</button>',
     width: 80,
     onReady: function(widget) {
+        var self = this;
         $(widget).click(function(){
             stockIt();
+            $("#stock-count", widget).text(stockList.urllist.length);
         });
     }
 });
@@ -58,6 +61,7 @@ jetpack.statusBar.append({
         $(widget).click(function(){
             stockList.urllist = [];
             clearSlide();
+            //$("#stock-count", widget).text("0");
         });
     }
 });
