@@ -26,7 +26,7 @@ function stockIt() {
         exists = exists || (st.url == url);
     })
     if (exists) return;
-    title = $('title', jetpack.tabs.focused.contentDocument).text();
+    var title = $('title', jetpack.tabs.focused.contentDocument).text();
     if (title.length > 30) {
         title = tabTitle.substr(0, 25);
         title += "...";
