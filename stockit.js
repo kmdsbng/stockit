@@ -82,11 +82,6 @@ jetpack.future.import("storage.settings");
 jetpack.slideBar.append({
     onReady: function (slide) {
 
-        function getTabIndex(tab) {
-            return tabs.indexOf(tab);
-        }
-
-
         function getTabFavicon(tab) {
             var favicon = tab.favicon || DEFAULT_FAVICON;
             return /^chrome:/.test(favicon) ? DEFAULT_FAVICON : favicon;
@@ -102,7 +97,10 @@ jetpack.slideBar.append({
         }
 
         function updateTabPreview(tab) {
-            var tabWidget = tabWidgets[getTabIndex(tab)];
+            var index = findTabWidgetByUrl(tab.url);
+            if (index < 0)
+              return;
+            var tabWidget = tabWidgets[index];
             var tabPreview = $("canvas", tabWidget);
             var ctx = tabPreview[0].getContext("2d");
             ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
@@ -174,29 +172,6 @@ jetpack.slideBar.append({
             return tabWidget;
         }
 
-        function onTabClosed(tab) {
-            var tabIndex = getTabIndex(tab);
-            var tabWidget = tabWidgets[tabIndex];
-            if (tabWidget.hasClass("focused")) {
-                tabWidget.addClass("focusedClosing");
-            }
-            tabWidgets.splice(tabIndex, 1);
-            tabs.splice(tabIndex, 1);
-            tabWidget.remove()
-        }
-
-        function removeSlide(tab) {
-            var tabIndex = getTabIndex(tab);
-            var tabWidget = tabWidgets[tabIndex];
-            if (tabWidget.hasClass("focused")) {
-                tabWidget.addClass("focusedClosing");
-            }
-            tabWidgets.splice(tabIndex, 1);
-            tabs.splice(tabIndex, 1);
-            tabWidget.remove()
-        }
-
-
         function removeSlideByURL(url) {
             var tabIndex = findTabWidgetByUrl(url);
             if (tabIndex < 0)
@@ -206,7 +181,6 @@ jetpack.slideBar.append({
                 tabWidget.addClass("focusedClosing");
             }
             tabWidgets.splice(tabIndex, 1);
-            //tabs.splice(tabIndex, 1);
             tabWidget.remove()
         }
 
@@ -218,34 +192,17 @@ jetpack.slideBar.append({
             return -1;
         }
 
-        function onTabFocused(tab) {
-            updateTabPreview(tab);
-            $(".focused", slide.contentDocument.body).removeClass("focused");
-            tabWidgets[getTabIndex(tab)].addClass("focused");
-        }
-
         addSlide = function onTabOpened(tab) {
             var tabWidget = makeTabWidget(tab);
             tabWidgets.push(tabWidget);
-            tabs.push(tab);
             tabWidget.appendTo($("#tabList", slide.contentDocument.body));
             tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
             updateTabPreview(tab);
         }
 
-        function onTabReady(tab) {
-            var tabWidget = tabWidgets[getTabIndex(tab)];
-            $(".title", tabWidget).text(getTabTitle(tab));
-            updateTabPreview(tab);
-            setTimeout(function () {
-                $(".favicon", tabWidget).attr("src", getTabFavicon(tab));
-            }, 3000);
-        }
-
         var newTabImage = $("#newtab img", slide.contentDocument.body);
         newTabImage.attr("src", NEW_TAB_ICON);
 
-        var tabs = []
         var tabWidgets = [];
 
         clearSlide = function() {
