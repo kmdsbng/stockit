@@ -16,7 +16,7 @@ jetpack.future.import("storage.simple");
 var stockList = jetpack.storage.simple;
 var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 
-var addSlide, clearSlide;
+var addSlide, clearSlide, notifyUpdate;
 
 function stockIt() {
     if (!stockList.urllist) stockList.urllist = [];
@@ -31,14 +31,16 @@ function stockIt() {
     var stock = {url : url, title: title};
     stockList.urllist.push(stock);
     addSlide(jetpack.tabs.focused);
+    notifyUpdate();
 }
+
+
 
 jetpack.future.import('menu');
 jetpack.menu.context.page.add({
     label: 'StockIt',
     command: function () {
         stockIt();
-        //$("#stock-count", jetpack.tabs.focused).text(stockList.urllist.length);
     }
 });
 
@@ -55,6 +57,9 @@ html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urlli
             clearSlide();
             $("#stock-count", widget).text("0");
         });
+        notifyUpdate = function() {
+          $("#stock-count", widget).text(stockList.urllist.length);
+        }
     }
 });
 
@@ -158,6 +163,7 @@ jetpack.slideBar.append({
             closeIcon.click(function () {
                 removeStorage(url);
                 removeSlideByURL(url);
+                notifyUpdate();
             });
             headerBar.append(closeIcon);
 
