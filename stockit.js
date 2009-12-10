@@ -103,8 +103,8 @@ jetpack.slideBar.append({
             var index = findTabWidgetByUrl(tab.url);
             if (index < 0)
               return;
-            var tabWidget = tabWidgets[index];
-            var tabPreview = $("canvas", tabWidget);
+            var slideItem = slideItems[index];
+            var tabPreview = $("canvas", slideItem);
             var ctx = tabPreview[0].getContext("2d");
             ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
         }
@@ -124,10 +124,10 @@ jetpack.slideBar.append({
         }
 
         function makeTabWidgetInner(url, titleText, tab) {
-            var tabWidget = $("<div />", slide.contentDocument.body);
-            tabWidget.attr('url', url);
-            tabWidget.addClass("tab");
-            tabWidget.click(function(event){
+            var slideItem = $("<div />", slide.contentDocument.body);
+            slideItem.attr('url', url);
+            slideItem.addClass("tab");
+            slideItem.click(function(event){
                 var index = isURLOpened(url)
                 if (index >= 0) {
                     if (!$(event.target).hasClass("closeButton")) {
@@ -141,7 +141,7 @@ jetpack.slideBar.append({
 
             var headerBar = $("<div />", slide.contentDocument.body);
             headerBar.addClass("headerBar");
-            tabWidget.append(headerBar);
+            slideItem.append(headerBar);
 
             if (tab != null) {
                 var favicon = $("<img />", slide.contentDocument.body);
@@ -167,53 +167,53 @@ jetpack.slideBar.append({
 
             var tabPreview = slide.contentDocument.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
             tabPreview.setAttribute("class", "tabPreview");
-            tabWidget.append(tabPreview);
+            slideItem.append(tabPreview);
 
-            tabWidget.mousedown(function (event) {
+            slideItem.mousedown(function (event) {
                 if (!$(event.target).hasClass("closeButton"))
                     tab.focus();
             });
-            return tabWidget;
+            return slideItem;
         }
 
         function removeSlideByURL(url) {
             var tabIndex = findTabWidgetByUrl(url);
             if (tabIndex < 0)
                 return;
-            var tabWidget = tabWidgets[tabIndex];
-            if (tabWidget.hasClass("focused")) {
-                tabWidget.addClass("focusedClosing");
+            var slideItem = slideItems[tabIndex];
+            if (slideItem.hasClass("focused")) {
+                slideItem.addClass("focusedClosing");
             }
-            tabWidgets.splice(tabIndex, 1);
-            tabWidget.remove()
+            slideItems.splice(tabIndex, 1);
+            slideItem.remove()
         }
 
         function findTabWidgetByUrl(url) {
-            for (var i=0; i < tabWidgets.length; i++) {
-                if (tabWidgets[i].attr('url') == url)
+            for (var i=0; i < slideItems.length; i++) {
+                if (slideItems[i].attr('url') == url)
                     return i;
             }
             return -1;
         }
 
         addSlide = function onTabOpened(tab) {
-            var tabWidget = makeTabWidget(tab);
-            tabWidgets.push(tabWidget);
-            tabWidget.appendTo($("#tabList", slide.contentDocument.body));
-            tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+            var slideItem = makeTabWidget(tab);
+            slideItems.push(slideItem);
+            slideItem.appendTo($("#tabList", slide.contentDocument.body));
+            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
             updateTabPreview(tab);
         }
 
         var newTabImage = $("#newtab img", slide.contentDocument.body);
         newTabImage.attr("src", NEW_TAB_ICON);
 
-        var tabWidgets = [];
+        var slideItems = [];
 
         clearSlide = function() {
-            for (var i = 0; i < tabWidgets.length; i++) {
-                tabWidgets[i].remove();
+            for (var i = 0; i < slideItems.length; i++) {
+                slideItems[i].remove();
             }
-            tabWidgets = [];
+            slideItems = [];
         }
         $(slide.contentDocument).dblclick(function (event) {
             if (event.target.localName === "HTML")
@@ -233,10 +233,10 @@ jetpack.slideBar.append({
         function resumeSlide() {
             for (var i=0; i < stockList.urllist.length; i++) {
                 var item = stockList.urllist[i];
-                var tabWidget = makeTabWidgetByStorageItem(item);
-                tabWidgets.push(tabWidget);
-                tabWidget.appendTo($("#tabList", slide.contentDocument.body));
-                tabWidget.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+                var slideItem = makeTabWidgetByStorageItem(item);
+                slideItems.push(slideItem);
+                slideItem.appendTo($("#tabList", slide.contentDocument.body));
+                slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
             }
         }
         resumeSlide();
