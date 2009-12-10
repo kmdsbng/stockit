@@ -100,7 +100,7 @@ jetpack.slideBar.append({
         }
 
         function updateTabPreview(tab) {
-            var index = findTabWidgetByUrl(tab.url);
+            var index = findSlideItemByUrl(tab.url);
             if (index < 0)
               return;
             var slideItem = slideItems[index];
@@ -109,12 +109,26 @@ jetpack.slideBar.append({
             ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
         }
 
-        function makeTabWidget(tab) {
-            return makeTabWidgetInner(tab.url, getTabTitle(tab), tab);
+        function makeSlideItem(tab) {
+            return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
         }
 
-        function makeTabWidgetByStorageItem(item) {
-            return makeTabWidgetInner(item.url, item.title);
+        function makeSlideItemByStorageItem(item) {
+            var tab = findTabByUrl(item.url)
+            if (tab)
+                return makeSlideItem(tab);
+            else
+                return makeSlideItemInner(item.url, item.title);
+        }
+
+        function resumeSlideItemByStorageItem(item) {
+            var tab = findTabByUrl(item.url)
+            var slideItem = tab ? makeSlideItem(tab)
+                                : makeSlideItemInner(item.url, item.title);
+            slideItems.push(slideItem);
+            slideItem.appendTo($("#tabList", slide.contentDocument.body));
+            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+            updateTabPreview(tab);
         }
 
         function isURLOpened(url) {
@@ -123,18 +137,26 @@ jetpack.slideBar.append({
             return -1;
         }
 
-        function makeTabWidgetInner(url, titleText, tab) {
+        function findTabByUrl(url) {
+            for (var i = 0; i < jetpack.tabs.length; i++)
+                if (jetpack.tabs[i].url == url)
+                    return jetpack.tabs[i];
+            return null;
+        }
+
+
+        function makeSlideItemInner(url, titleText, tab) {
             var slideItem = $("<div />", slide.contentDocument.body);
             slideItem.attr('url', url);
             slideItem.addClass("tab");
             slideItem.click(function(event){
                 var index = isURLOpened(url)
-                if (index >= 0) {
-                    if (!$(event.target).hasClass("closeButton")) {
-                        jetpack.tabs[index].focus();
-                    }
-                } else {
-                    jetpack.tabs.open(url).focus();
+                if (!$(event.target).hasClass("closeButton")) {
+                    var tab = findTabByUrl(url);
+                    if (tab)
+                        tab.focus();
+                    else
+                        jetpack.tabs.open(url).focus();
                 }
             })
 
@@ -177,7 +199,7 @@ jetpack.slideBar.append({
         }
 
         function removeSlideByURL(url) {
-            var tabIndex = findTabWidgetByUrl(url);
+            var tabIndex = findSlideItemByUrl(url);
             if (tabIndex < 0)
                 return;
             var slideItem = slideItems[tabIndex];
@@ -188,7 +210,7 @@ jetpack.slideBar.append({
             slideItem.remove()
         }
 
-        function findTabWidgetByUrl(url) {
+        function findSlideItemByUrl(url) {
             for (var i=0; i < slideItems.length; i++) {
                 if (slideItems[i].attr('url') == url)
                     return i;
@@ -197,7 +219,7 @@ jetpack.slideBar.append({
         }
 
         addSlide = function onTabOpened(tab) {
-            var slideItem = makeTabWidget(tab);
+            var slideItem = makeSlideItem(tab);
             slideItems.push(slideItem);
             slideItem.appendTo($("#tabList", slide.contentDocument.body));
             slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
@@ -233,10 +255,7 @@ jetpack.slideBar.append({
         function resumeSlide() {
             for (var i=0; i < stockList.urllist.length; i++) {
                 var item = stockList.urllist[i];
-                var slideItem = makeTabWidgetByStorageItem(item);
-                slideItems.push(slideItem);
-                slideItem.appendTo($("#tabList", slide.contentDocument.body));
-                slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+                var slideItem = resumeSlideItemByStorageItem(item);
             }
         }
         resumeSlide();
