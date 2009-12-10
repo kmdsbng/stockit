@@ -13,9 +13,10 @@ var manifest = {
 jetpack.future.import("storage.settings");
 jetpack.future.import("storage.simple");
 
+// global objects
+var mainModel = {};
 var stockList = jetpack.storage.simple;
 var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-
 var addSlide, clearSlide, notifyUpdate;
 
 function stockIt() {
@@ -45,17 +46,13 @@ jetpack.menu.context.page.add({
 });
 
 jetpack.statusBar.append({
-html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urllist ? stockList.urllist.length : 0)+'</span>)</button><button id="clear-stock">clear</button>',
-    width: 140,
+html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urllist ? stockList.urllist.length : 0)+'</span>)</button>',
+    width: 80,
     onReady: function(widget) {
+        mainModel.statusBarArea = widget;
         $("#add-stock", widget).click(function(){
             stockIt();
             $("#stock-count", widget).text(stockList.urllist.length);
-        });
-        $("#clear-stock", widget).click(function(){
-            stockList.urllist = [];
-            clearSlide();
-            $("#stock-count", widget).text("0");
         });
         notifyUpdate = function() {
           $("#stock-count", widget).text(stockList.urllist.length);
@@ -86,6 +83,7 @@ jetpack.future.import("slideBar");
 jetpack.future.import("storage.settings");
 jetpack.slideBar.append({
     onReady: function (slide) {
+        mainModel.slideBarArea = slide.contentDocument.body;
 
         function getTabFavicon(tab) {
             var favicon = tab.favicon || DEFAULT_FAVICON;
@@ -226,6 +224,12 @@ jetpack.slideBar.append({
             jetpack.tabs.open("about:blank").focus();
         });
 
+        $("#clear-stock", mainModel.slideBarArea).click(function(){
+            stockList.urllist = [];
+            clearSlide();
+            $("#stock-count", mainModel.statusBarArea).text("0");
+        });
+
         function resumeSlide() {
             for (var i=0; i < stockList.urllist.length; i++) {
                 var item = stockList.urllist[i];
@@ -305,9 +309,31 @@ jetpack.slideBar.append({
                 outline: 1px solid gray;
                 width:   206px;
             }
+            #slideHeader .left {
+                float: left;
+                width: 170px;
+            }
+            #slideHeader .right {
+                float: right;
+                width: 50px;
+            }
+            #slideHeader .right button {
+                margin-top: 15px;
+            }
+            #slideHeader .clear {
+                clear: both;
+            }
         ]]></style>
         <body>
-        <h2>Stack URL List</h2>
+        <div id="slideHeader">
+          <div class="left">
+            <h2>Stack URL List</h2>
+          </div>
+          <div class="right">
+            <button id="clear-stock">clear</button>
+          </div>
+          <div class="clear"></div>
+        </div>
         <div id="tabList"></div>
         </body>
         </>
