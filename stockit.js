@@ -75,7 +75,7 @@ function removeStorage(url) {
     stockList.urllist = result;
 }
 
-const SLIDEBAR_ICON = "http://kmdsbng.railsplayground.net/stockit_icon.png";
+const SLIDEBAR_ICON = "http://github.com/kmdsbng/stockit/raw/master/img/stockit_icon.png";
 const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
 const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
 const NEW_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/new_tab.png";
