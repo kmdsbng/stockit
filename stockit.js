@@ -86,8 +86,7 @@ jetpack.slideBar.append({
         mainModel.slideBarArea = slide.contentDocument.body;
 
         function getTabFavicon(tab) {
-            var favicon = tab.favicon || DEFAULT_FAVICON;
-            return /^chrome:/.test(favicon) ? DEFAULT_FAVICON : favicon;
+            return (!tab || /^chrome:/.test(tab.favicon)) ? DEFAULT_FAVICON : tab.favicon;
         }
 
         function getTabTitle(tab) {
@@ -102,23 +101,20 @@ jetpack.slideBar.append({
             return tabTitle;
         }
 
-        function updateTabPreview(url, tab, imageData) {
-            var index = findSlideItemByUrl(url);
-            if (index < 0)
-              return;
-            var slideItem = slideItems[index];
+        function showLoadedThumbnail(slideItem, tab, imageData) {
             var canvas = $("canvas", slideItem);
             var img = $("img.preview", slideItem);
-            if (imageData) {
-              img.attr('src', imageData).show();
-              canvas.hide();
-            } else if (tab) {
-              var ctx = canvas[0].getContext("2d");
-              ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
-              return canvas[0].toDataURL("image/png");
-            }
+            img.attr('src', imageData).show();
+            canvas.hide();
         }
 
+        function showTabThumbnail(slideItem, tab) {
+            var canvas = $("canvas", slideItem);
+            var img = $("img.preview", slideItem);
+            var ctx = canvas[0].getContext("2d");
+            ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
+            return canvas[0].toDataURL("image/png");
+        }
 
         function makeSlideItem(tab) {
             return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
@@ -139,13 +135,27 @@ jetpack.slideBar.append({
             addSlideItem(slideItem, tab, item.url, item.image);
         }
 
-        function addSlideItem(item, tab, url, loadedImageData) {
-            slideItems.push(item);
-            item.appendTo($("#tabList", slide.contentDocument.body));
-            item.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+        function getSlideItemByUrl(url) {
+            var index = getSlideItemIndexByUrl(url);
+            return (index < 0) ? null : slideItems[index];
+        }
+
+        function addSlideItem(slideItem, tab, url, loadedImageData) {
+            slideItems.push(slideItem);
+            slideItem.appendTo($("#tabList", slide.contentDocument.body));
+            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
             var imageData;
-            imageData = updateTabPreview(url, tab, loadedImageData);
-            return imageData
+            if (loadedImageData) {
+                showLoadedThumbnail(slideItem, tab, loadedImageData);
+            } else if (tab) {
+                showTabThumbnail(slideItem, tab);
+                return getCanvasImageData();
+            }
+        }
+
+        function getCanvasImageData() {
+            var canvas = $("canvas", slideItem);
+            return canvas[0].toDataURL("image/png");
         }
 
         function findTabByUrl(url) {
@@ -155,7 +165,7 @@ jetpack.slideBar.append({
             return null;
         }
 
-        function findSlideItemByUrl(url) {
+        function getSlideItemIndexByUrl(url) {
             for (var i=0; i < slideItems.length; i++) {
                 if (slideItems[i].attr('url') == url)
                     return i;
@@ -183,12 +193,10 @@ jetpack.slideBar.append({
             headerBar.addClass("headerBar");
             slideItem.append(headerBar);
 
-            if (tab != null) {
-                var favicon = $("<img />", slide.contentDocument.body);
-                favicon.attr("src", getTabFavicon(tab));
-                favicon.addClass("favicon");
-                headerBar.append(favicon);
-            }
+            var favicon = $("<img />", slide.contentDocument.body);
+            favicon.attr("src", getTabFavicon(tab));
+            favicon.addClass("favicon");
+            headerBar.append(favicon);
 
             var title = $("<div />", slide.contentDocument.body);
             title.addClass("title");
@@ -217,7 +225,7 @@ jetpack.slideBar.append({
         }
 
         function removeSlideByURL(url) {
-            var tabIndex = findSlideItemByUrl(url);
+            var tabIndex = getSlideItemIndexByUrl(url);
             if (tabIndex < 0)
                 return;
             var slideItem = slideItems[tabIndex];
