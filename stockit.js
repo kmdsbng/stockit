@@ -212,10 +212,6 @@ jetpack.slideBar.append({
             img.hide();
             slideItem.append(img);
 
-            slideItem.mousedown(function (event) {
-                if (!$(event.target).hasClass("closeButton"))
-                    tab.focus();
-            });
             return slideItem;
         }
 
