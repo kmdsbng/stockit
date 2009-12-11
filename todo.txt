@@ -1,0 +1,36 @@
+! すぐとりかかる
+* Stack URL Listにはサムネイルサービスで生成された画像を表示する。
+  画像がサービスに登録されてないときだけ、サムネイルを生成して表示する
+* refactoring
+  * ロジックをmodelに移動する
+  * viewを作成し、表示ロジックを移動する
+  * addButtonなどからのコールバック関数からは、コントローラの登録のみ行う
+
+
+! できたらやる
+* snsとsyncする機能を追加する
+  * sns連携設定を追加する
+  * sns連携がONなら、
+    * リストから削除したら、doneListに追加する
+    * slideListにsyncボタンを追加する
+    * syncボタンが押されたら、
+      * [slideList, doneList].flatten の要素のURLごとに、snsにすでに登録されてるかチェック
+        * if 登録されている
+            * read_afterタグがついていなければ、read_afterタグを追加
+          else
+            * URLをsnsに登録し、read_afterタグをつける
+        * if doneListの要素なら
+            * already_readタグをつける(ついてなければ)
+            * doneListから削除
+          
+      * snsから、read_afterタグが付けられていて、かつ、already_readタグが付けられていない
+        URLを検索する。(!これは重そう。ブックマーク数が増えるごとに
+        リニアに処理時間が増大する。要検討。前回sync時の時刻を覚えておいて、
+        それ以降のアイテムから検索、みたいなことがsns検索でできるか？)
+        * URLごとに、slideListになければ追加する、という処理を繰り返す。
+  * 対応するsns
+    * del.icio.us, はてブ
+
+
+
+
