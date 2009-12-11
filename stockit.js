@@ -17,6 +17,7 @@ jetpack.future.import("storage.simple");
 var mainModel = {};
 var stockList = jetpack.storage.simple;
 var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
+//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 var addSlide, clearSlide, notifyUpdate;
 
 function stockIt() {
@@ -28,10 +29,9 @@ function stockIt() {
     })
     if (exists) return;
     var title = $('title', jetpack.tabs.focused.contentDocument).text();
-    if (title.length > 30) title = title.substr(0, 25) + "...";
-    var stock = {url : url, title: title};
+    var imageData = addSlide(jetpack.tabs.focused);
+    var stock = {url : url, title: title, image: imageData};
     stockList.urllist.push(stock);
-    addSlide(jetpack.tabs.focused);
     notifyUpdate();
 }
 
@@ -91,23 +91,34 @@ jetpack.slideBar.append({
         }
 
         function getTabTitle(tab) {
-            var tabTitle = tab.raw.label;
-            if (tabTitle.length > 30) {
-                tabTitle = tabTitle.substr(0, 25);
+            return fitTitle(tab.raw.label);
+        }
+
+        function fitTitle(tabTitle) {
+            if (tabTitle.length > 25) {
+                tabTitle = tabTitle.substr(0, 20);
                 tabTitle += "...";
             }
             return tabTitle;
         }
 
-        function updateTabPreview(tab) {
-            var index = findSlideItemByUrl(tab.url);
+        function updateTabPreview(url, tab, imageData) {
+            var index = findSlideItemByUrl(url);
             if (index < 0)
               return;
             var slideItem = slideItems[index];
-            var tabPreview = $("canvas", slideItem);
-            var ctx = tabPreview[0].getContext("2d");
-            ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
+            var canvas = $("canvas", slideItem);
+            var img = $("img.preview", slideItem);
+            if (imageData) {
+              img.attr('src', imageData).show();
+              canvas.hide();
+            } else if (tab) {
+              var ctx = canvas[0].getContext("2d");
+              ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
+              return canvas[0].toDataURL("image/png");
+            }
         }
+
 
         function makeSlideItem(tab) {
             return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
@@ -118,22 +129,23 @@ jetpack.slideBar.append({
             if (tab)
                 return makeSlideItem(tab);
             else
-                return makeSlideItemInner(item.url, item.title);
+                return makeSlideItemInner(item.url, fitTitle(item.title));
         }
 
         function resumeSlideItemByStorageItem(item) {
             var tab = findTabByUrl(item.url)
             var slideItem = tab ? makeSlideItem(tab)
                                 : makeSlideItemInner(item.url, item.title);
-            addSlideItem(slideItem, tab);
+            addSlideItem(slideItem, tab, item.url, item.image);
         }
 
-        function addSlideItem(item, tab) {
+        function addSlideItem(item, tab, url, loadedImageData) {
             slideItems.push(item);
             item.appendTo($("#tabList", slide.contentDocument.body));
             item.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            if (tab)
-                updateTabPreview(tab);
+            var imageData;
+            imageData = updateTabPreview(url, tab, loadedImageData);
+            return imageData
         }
 
         function isURLOpened(url) {
@@ -196,6 +208,10 @@ jetpack.slideBar.append({
             tabPreview.setAttribute("class", "tabPreview");
             slideItem.append(tabPreview);
 
+            var img = $('<img class="preview" src="">', slide.contentDocument);
+            img.hide();
+            slideItem.append(img);
+
             slideItem.mousedown(function (event) {
                 if (!$(event.target).hasClass("closeButton"))
                     tab.focus();
@@ -225,7 +241,7 @@ jetpack.slideBar.append({
 
         addSlide = function onTabOpened(tab) {
             var slideItem = makeSlideItem(tab);
-            addSlideItem(slideItem, tab);
+            return addSlideItem(slideItem, tab, tab.url);
         }
 
         var newTabImage = $("#newtab img", slide.contentDocument.body);
@@ -331,9 +347,15 @@ jetpack.slideBar.append({
                 outline: 1px solid gray;
                 width:   206px;
             }
+
+            div.tab img.preview {
+                outline: 1px solid gray;
+                width:   206px;
+                height:  100px;
+            }
             #slideHeader .left {
                 float: left;
-                width: 170px;
+                width: 150px;
             }
             #slideHeader .right {
                 float: right;
