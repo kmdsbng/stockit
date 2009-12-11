@@ -32,7 +32,6 @@ function stockIt() {
     var stock = {url : url, title: title};
     stockList.urllist.push(stock);
     addSlide(jetpack.tabs.focused);
-    console.log(item.url);
     notifyUpdate();
 }
 
