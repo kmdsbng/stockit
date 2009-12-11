@@ -32,6 +32,7 @@ function stockIt() {
     var stock = {url : url, title: title};
     stockList.urllist.push(stock);
     addSlide(jetpack.tabs.focused);
+    console.log(item.url);
     notifyUpdate();
 }
 
@@ -125,10 +126,15 @@ jetpack.slideBar.append({
             var tab = findTabByUrl(item.url)
             var slideItem = tab ? makeSlideItem(tab)
                                 : makeSlideItemInner(item.url, item.title);
-            slideItems.push(slideItem);
-            slideItem.appendTo($("#tabList", slide.contentDocument.body));
-            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            updateTabPreview(tab);
+            addSlideItem(slideItem, tab);
+        }
+
+        function addSlideItem(item, tab) {
+            slideItems.push(item);
+            item.appendTo($("#tabList", slide.contentDocument.body));
+            item.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+            if (tab)
+                updateTabPreview(tab);
         }
 
         function isURLOpened(url) {
@@ -220,10 +226,7 @@ jetpack.slideBar.append({
 
         addSlide = function onTabOpened(tab) {
             var slideItem = makeSlideItem(tab);
-            slideItems.push(slideItem);
-            slideItem.appendTo($("#tabList", slide.contentDocument.body));
-            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            updateTabPreview(tab);
+            addSlideItem(slideItem, tab);
         }
 
         var newTabImage = $("#newtab img", slide.contentDocument.body);
@@ -254,6 +257,7 @@ jetpack.slideBar.append({
 
         function resumeSlide() {
             for (var i=0; i < stockList.urllist.length; i++) {
+                console.log(stockList.urllist[i].url);
                 var item = stockList.urllist[i];
                 var slideItem = resumeSlideItemByStorageItem(item);
             }
