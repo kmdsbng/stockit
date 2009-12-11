@@ -148,17 +148,19 @@ jetpack.slideBar.append({
             return imageData
         }
 
-        function isURLOpened(url) {
-            for (var i = 0; i < jetpack.tabs.length; i++)
-                if (jetpack.tabs[i].url == url) return i
-            return -1;
-        }
-
         function findTabByUrl(url) {
             for (var i = 0; i < jetpack.tabs.length; i++)
                 if (jetpack.tabs[i].url == url)
                     return jetpack.tabs[i];
             return null;
+        }
+
+        function findSlideItemByUrl(url) {
+            for (var i=0; i < slideItems.length; i++) {
+                if (slideItems[i].attr('url') == url)
+                    return i;
+            }
+            return -1;
         }
 
 
@@ -167,7 +169,6 @@ jetpack.slideBar.append({
             slideItem.attr('url', url);
             slideItem.addClass("tab");
             slideItem.click(function(event){
-                var index = isURLOpened(url)
                 if (!$(event.target).hasClass("closeButton")) {
                     var tab = findTabByUrl(url);
                     if (tab)
@@ -225,14 +226,6 @@ jetpack.slideBar.append({
             }
             slideItems.splice(tabIndex, 1);
             slideItem.remove()
-        }
-
-        function findSlideItemByUrl(url) {
-            for (var i=0; i < slideItems.length; i++) {
-                if (slideItems[i].attr('url') == url)
-                    return i;
-            }
-            return -1;
         }
 
         addSlide = function onTabOpened(tab) {
