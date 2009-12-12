@@ -90,7 +90,7 @@ jetpack.slideBar.append({
         }
 
         function getTabTitle(tab) {
-            return fitTitle(tab.raw.label);
+            return tab.raw.label;
         }
 
         function fitTitle(tabTitle) {
@@ -125,7 +125,7 @@ jetpack.slideBar.append({
             if (tab)
                 return makeSlideItem(tab);
             else
-                return makeSlideItemInner(item.url, fitTitle(item.title));
+                return makeSlideItemInner(item.url, item.title);
         }
 
         function resumeSlideItemByStorageItem(item) {
@@ -133,11 +133,6 @@ jetpack.slideBar.append({
             var slideItem = tab ? makeSlideItem(tab)
                                 : makeSlideItemInner(item.url, item.title);
             addSlideItem(slideItem, tab, item.url, item.image);
-        }
-
-        function getSlideItemByUrl(url) {
-            var index = getSlideItemIndexByUrl(url);
-            return (index < 0) ? null : slideItems[index];
         }
 
         function addSlideItem(slideItem, tab, url, loadedImageData) {
@@ -149,11 +144,11 @@ jetpack.slideBar.append({
                 showLoadedThumbnail(slideItem, tab, loadedImageData);
             } else if (tab) {
                 showTabThumbnail(slideItem, tab);
-                return getCanvasImageData();
+                return getCanvasImageData(slideItem);
             }
         }
 
-        function getCanvasImageData() {
+        function getCanvasImageData(slideItem) {
             var canvas = $("canvas", slideItem);
             return canvas[0].toDataURL("image/png");
         }
@@ -165,12 +160,28 @@ jetpack.slideBar.append({
             return null;
         }
 
-        function getSlideItemIndexByUrl(url) {
-            for (var i=0; i < slideItems.length; i++) {
-                if (slideItems[i].attr('url') == url)
-                    return i;
+        function getSlideIndexByUrl(url) {
+            var finded = findSlideItemWithIndexByUrl(url);
+            return finded ? finded[1] : -1;
+        }
+
+        function findSlideItemByUrl(url) {
+            var finded = findSlideItemWithIndexByUrl(url);
+            return finded ? finded[0] : null;
+        }
+
+        function findSlideItemWithIndexByUrl(url) {
+            return findWithIndex(
+                       slideItems, 
+                       function (v) {return v.attr('url') == url;});
+        }
+
+        function findWithIndex(ary, judge) {
+            for (var i=0; i < ary.length; i++) {
+                if (judge(ary[i]))
+                    return [ary[i], i];
             }
-            return -1;
+            return null;
         }
 
 
@@ -188,7 +199,6 @@ jetpack.slideBar.append({
                 }
             })
 
-
             var headerBar = $("<div />", slide.contentDocument.body);
             headerBar.addClass("headerBar");
             slideItem.append(headerBar);
@@ -200,7 +210,7 @@ jetpack.slideBar.append({
 
             var title = $("<div />", slide.contentDocument.body);
             title.addClass("title");
-            title.text(titleText);
+            title.text(fitTitle(titleText));
             headerBar.append(title);
 
             var closeIcon = $("<img />", slide.contentDocument.body);
@@ -225,18 +235,19 @@ jetpack.slideBar.append({
         }
 
         function removeSlideByURL(url) {
-            var tabIndex = getSlideItemIndexByUrl(url);
-            if (tabIndex < 0)
+            var finded = findSlideItemWithIndexByUrl(url);
+            if (!finded)
                 return;
-            var slideItem = slideItems[tabIndex];
+            var slideItem = finded[0];
+            var index = finded[1];
             if (slideItem.hasClass("focused")) {
                 slideItem.addClass("focusedClosing");
             }
-            slideItems.splice(tabIndex, 1);
+            slideItems.splice(index, 1);
             slideItem.remove()
         }
 
-        addSlide = function onTabOpened(tab) {
+        addSlide = function (tab) {
             var slideItem = makeSlideItem(tab);
             return addSlideItem(slideItem, tab, tab.url);
         }
@@ -277,7 +288,7 @@ jetpack.slideBar.append({
         resumeSlide();
     },
     icon: SLIDEBAR_ICON,
-    width: 250,
+    width: 270,
     persist: true,
     html: <>
         <style><![CDATA[
@@ -379,4 +390,5 @@ jetpack.slideBar.append({
         </body>
         </>
 });
+
 
