@@ -120,14 +120,6 @@ jetpack.slideBar.append({
             return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
         }
 
-        function makeSlideItemByStorageItem(item) {
-            var tab = findTabByUrl(item.url)
-            if (tab)
-                return makeSlideItem(tab);
-            else
-                return makeSlideItemInner(item.url, item.title);
-        }
-
         function resumeSlideItemByStorageItem(item) {
             var tab = findTabByUrl(item.url)
             var slideItem = tab ? makeSlideItem(tab)
@@ -280,7 +272,6 @@ jetpack.slideBar.append({
 
         function resumeSlide() {
             for (var i=0; i < stockList.urllist.length; i++) {
-                console.log(stockList.urllist[i].url);
                 var item = stockList.urllist[i];
                 var slideItem = resumeSlideItemByStorageItem(item);
             }
