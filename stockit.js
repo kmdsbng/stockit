@@ -12,6 +12,9 @@ var manifest = {
 
 jetpack.future.import("storage.settings");
 jetpack.future.import("storage.simple");
+jetpack.future.import('menu');
+jetpack.future.import("slideBar");
+jetpack.future.import("storage.settings");
 
 // global objects
 var mainModel = {};
@@ -37,7 +40,6 @@ function stockIt() {
 
 
 
-jetpack.future.import('menu');
 jetpack.menu.context.page.add({
     label: 'StockIt',
     command: function () {
@@ -79,8 +81,6 @@ const NEW_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/new_tab.png";
 const PREF_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/pref.png";
 
 
-jetpack.future.import("slideBar");
-jetpack.future.import("storage.settings");
 jetpack.slideBar.append({
     onReady: function (slide) {
         mainModel.slideBarArea = slide.contentDocument.body;
