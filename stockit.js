@@ -19,17 +19,16 @@ jetpack.future.import("slideBar");
 // global objects
 var mainModel = {};
 var stockList = jetpack.storage.simple;
-var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+//var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
+var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 var addSlide, clearSlide, notifyUpdate;
 
 var LogWindow = {};
 LogWindow.log = (function () {
   var DEBUG_WINDOW_TITLE = 'Debug Window';
-  var debugCount = 0;
-  var debugTab = null;
+  var outputTab = null;
 
-  function findDebugTab() {
+  function findOutputTab() {
     var tabs = jetpack.tabs;
     for (var i=0; i < tabs.length; i++) {
       var doc = tabs[i].contentDocument;
@@ -40,33 +39,36 @@ LogWindow.log = (function () {
     return null;
   }
 
-  function openDebugTab() {
-    var debugTab = jetpack.tabs.open('about:blank');
-    var doc = debugTab.contentDocument;
+  function openOutputTab() {
+    var tab = jetpack.tabs.open('about:blank');
+    var doc = tab.contentDocument;
     doc.write('<html><head><title>' + DEBUG_WINDOW_TITLE + '</title></head><body><ul id="debugList"></ul></body></html>');
-    return debugTab;
+    return tab;
   }
 
   function prepareTab() {
-    if (debugTab)
-      return debugTab;
+    if (outputTab)
+      return outputTab;
 
-    var tab = findDebugTab();
+    var tab = findOutputTab();
     if (!tab)
-      tab = openDebugTab();
-    debugTab = tab;
+      tab = openOutputTab();
+    outputTab = tab;
     return tab;
   }
+
+  function onTabClosed(tab) {
+    if (tab == outputTab)
+      outputTab = null;
+  }
+  jetpack.tabs.onClose(function (){onTabClosed(this);});
 
   return function writeLog(text) {
     var tab = prepareTab();
     var doc = tab.contentDocument;
-    $('#debugList', doc).append('<li>' + text + debugCount + '</li>');
-    debugCount++;
+    $('#debugList', doc).append('<li>' + text + '</li>');
   }
 })();
-
-// LogWindow.log('hoge');
 
 function stockIt() {
     if (!stockList.urllist) stockList.urllist = [];
