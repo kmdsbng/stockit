@@ -13,9 +13,8 @@ var manifest = {
 jetpack.future.import("storage.simple");
 jetpack.future.import('menu');
 jetpack.future.import("slideBar");
-// error occured in jetpack 0.7
+// delete this line because error occured in jetpack 0.7
 //jetpack.future.import("storage.settings");
-
 
 // global objects
 var mainModel = {};
@@ -24,21 +23,52 @@ var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 //var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 var addSlide, clearSlide, notifyUpdate;
 
-/*
-function writeLogToDebugLogWindow(text) {
-  //var debugTab = jetpack.tabs.focused.contentWindow.open('about:blank');
-  //var debugTab = jetpack.tabs.open('<html><body></body></html>');
-  var debugTab = jetpack.tabs.open('about:blank');
-  var doc = $(debugTab.contentDocument);
-  doc[0].write('<html><body>hoge</body></html>');
-  $('body', doc).text('moge');
-  
-}
-*/
+var LogWindow = {};
+LogWindow.log = (function () {
+  var DEBUG_WINDOW_TITLE = 'Debug Window';
+  var debugCount = 0;
+  var debugTab = null;
+
+  function findDebugTab() {
+    var tabs = jetpack.tabs;
+    for (var i=0; i < tabs.length; i++) {
+      var doc = tabs[i].contentDocument;
+      var title = $('title', doc).text();
+      if (title === DEBUG_WINDOW_TITLE)
+        return tabs[i];
+    }
+    return null;
+  }
+
+  function openDebugTab() {
+    var debugTab = jetpack.tabs.open('about:blank');
+    var doc = debugTab.contentDocument;
+    doc.write('<html><head><title>' + DEBUG_WINDOW_TITLE + '</title></head><body><ul id="debugList"></ul></body></html>');
+    return debugTab;
+  }
+
+  function prepareTab() {
+    if (debugTab)
+      return debugTab;
+
+    var tab = findDebugTab();
+    if (!tab)
+      tab = openDebugTab();
+    debugTab = tab;
+    return tab;
+  }
+
+  return function writeLog(text) {
+    var tab = prepareTab();
+    var doc = tab.contentDocument;
+    $('#debugList', doc).append('<li>' + text + debugCount + '</li>');
+    debugCount++;
+  }
+})();
+
+// LogWindow.log('hoge');
 
 function stockIt() {
-    //writeLogToDebugLogWindow('hoge');
-
     if (!stockList.urllist) stockList.urllist = [];
     var exists = false;
     var url = jetpack.tabs.focused.url;
