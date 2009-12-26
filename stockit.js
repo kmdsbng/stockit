@@ -10,11 +10,12 @@ var manifest = {
     ]
 };
 
-jetpack.future.import("storage.settings");
 jetpack.future.import("storage.simple");
 jetpack.future.import('menu');
 jetpack.future.import("slideBar");
-jetpack.future.import("storage.settings");
+// error occured in jetpack 0.7
+//jetpack.future.import("storage.settings");
+
 
 // global objects
 var mainModel = {};
@@ -23,7 +24,21 @@ var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 //var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 var addSlide, clearSlide, notifyUpdate;
 
+/*
+function writeLogToDebugLogWindow(text) {
+  //var debugTab = jetpack.tabs.focused.contentWindow.open('about:blank');
+  //var debugTab = jetpack.tabs.open('<html><body></body></html>');
+  var debugTab = jetpack.tabs.open('about:blank');
+  var doc = $(debugTab.contentDocument);
+  doc[0].write('<html><body>hoge</body></html>');
+  $('body', doc).text('moge');
+  
+}
+*/
+
 function stockIt() {
+    //writeLogToDebugLogWindow('hoge');
+
     if (!stockList.urllist) stockList.urllist = [];
     var exists = false;
     var url = jetpack.tabs.focused.url;
