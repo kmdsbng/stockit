@@ -22,9 +22,17 @@ var stockList = jetpack.storage.simple;
 //var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
 //var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 // Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
-var notify = function(msg) {LogWindow.log(msg);};
+//var notify = function(msg) {LogWindow.log(uneval(msg));};
+var beforeStartup = true;
+var notify = function(msg) {
+  if (beforeStartup)
+    jetpack.notifications.show(uneval(msg))
+  else
+    LogWindow.log(uneval(msg));
+};
 var addSlide, clearSlide, notifyUpdate;
 
+// LogWindow utility
 var LogWindow = {};
 LogWindow.log = (function () {
   var DEBUG_WINDOW_TITLE = 'Debug Window';
@@ -40,7 +48,6 @@ LogWindow.log = (function () {
     }
     return null;
   }
-
 
   function openOutputTab() {
     var tab = jetpack.tabs.open('about:blank');
@@ -74,6 +81,22 @@ LogWindow.log = (function () {
   }
 })();
 
+// Tracer utility
+var Tracer = {};
+Tracer.wrap = function(receiver, methodNames, notifyMethod) {
+  if (!notifyMethod)
+    notifyMethod = console.log;
+  if (typeof(methodNames) === 'string')
+    methodNames = [methodNames];
+  for (var i=0; i < methodNames.length; i++) {
+    var name = methodNames[i];
+    var content = receiver[name];
+    receiver[name] = function () {
+      notifyMethod('enter ' + name);
+      content.apply(this, arguments);
+    }
+  }
+}
 
 function stockIt() {
     if (!stockList.urllist) stockList.urllist = [];
@@ -434,4 +457,9 @@ jetpack.slideBar.append({
         </>
 });
 
+// for trace method
+//Tracer.wrap(this, ['stockIt'], notify);
+
+// use this variable to know start to use LogWindow.
+beforeStartup = false;
 
