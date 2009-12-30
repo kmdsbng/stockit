@@ -20,7 +20,9 @@ jetpack.future.import("slideBar");
 var mainModel = {};
 var stockList = jetpack.storage.simple;
 //var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+// Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
+var notify = function(msg) {LogWindow.log(msg);};
 var addSlide, clearSlide, notifyUpdate;
 
 var LogWindow = {};
@@ -38,6 +40,7 @@ LogWindow.log = (function () {
     }
     return null;
   }
+
 
   function openOutputTab() {
     var tab = jetpack.tabs.open('about:blank');
@@ -63,12 +66,14 @@ LogWindow.log = (function () {
   }
   jetpack.tabs.onClose(function (){onTabClosed(this);});
 
+
   return function writeLog(text) {
     var tab = prepareTab();
     var doc = tab.contentDocument;
     $('#debugList', doc).append('<li>' + text + '</li>');
   }
 })();
+
 
 function stockIt() {
     if (!stockList.urllist) stockList.urllist = [];
