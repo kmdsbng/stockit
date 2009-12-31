@@ -18,19 +18,31 @@ jetpack.future.import("slideBar");
 
 // global objects
 var mainModel = {};
+mainModel.statusBarAreas = [];
+mainModel.slideBarAreas = [];
+
 var stockList = jetpack.storage.simple;
 //var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
-// Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
+var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+// Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) 
+// -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
 //var notify = function(msg) {LogWindow.log(uneval(msg));};
 var beforeStartup = true;
-var notify = function(msg) {
-  if (beforeStartup)
-    jetpack.notifications.show(uneval(msg))
-  else
-    LogWindow.log(uneval(msg));
-};
-var addSlide, clearSlide, notifyUpdate;
+//var notify = function(msg) {
+//  if (beforeStartup)
+//    jetpack.notifications.show(uneval(msg))
+//  else
+//    LogWindow.log(uneval(msg));
+//};
+var addSlide, clearSlide;
+
+var notifyUpdate = function() {
+  var widgets = mainModel.statusBarAreas;
+  for (var i=0; i < widgets.length; i++) {
+    var widget = widgets[i];
+    $("#stock-count", widget).text(stockList.urllist.length);
+  }
+}
 
 // LogWindow utility
 var LogWindow = {};
@@ -84,6 +96,32 @@ LogWindow.log = (function () {
 // Tracer utility
 var Tracer = {};
 Tracer.wrap = function(receiver, methodNames, notifyMethod) {
+  function makeValueStr(v) {
+    return (typeof(v) == 'number' || typeof(v) == 'string') ? v.toString() : typeof(v);
+  }
+
+  function makeArgsSignature(args) {
+    var result = [];
+    for (var i=0; i < args.length; i++) {
+      result.push(makeValueStr(args[i]));
+    }
+    return result.join(', ');
+  }
+
+  function makeSignature(name, args) {
+    return name + '(' + makeArgsSignature(args) + ')';
+  }
+
+  function makeNotifier(receiver, name, content) {
+    var name = methodNames[i];
+    var content = receiver[name];
+    var signature = makeSignature(name, arguments);
+    receiver[name] = function () {
+      notifyMethod('enter ' + signature);
+      content.apply(this, arguments);
+    }
+  }
+
   if (!notifyMethod)
     notifyMethod = console.log;
   if (typeof(methodNames) === 'string')
@@ -91,8 +129,9 @@ Tracer.wrap = function(receiver, methodNames, notifyMethod) {
   for (var i=0; i < methodNames.length; i++) {
     var name = methodNames[i];
     var content = receiver[name];
+    var signature = makeSignature(name, arguments);
     receiver[name] = function () {
-      notifyMethod('enter ' + name);
+      notifyMethod('enter ' + signature);
       content.apply(this, arguments);
     }
   }
@@ -126,14 +165,15 @@ jetpack.statusBar.append({
 html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urllist ? stockList.urllist.length : 0)+'</span>)</button>',
     width: 90,
     onReady: function(widget) {
-        mainModel.statusBarArea = widget;
+        mainModel.statusBarAreas.push(widget);
         $("#add-stock", widget).click(function(){
             stockIt();
-            $("#stock-count", widget).text(stockList.urllist.length);
+            notifyUpdate();
+            //$("#stock-count", widget).text(stockList.urllist.length);
         });
-        notifyUpdate = function() {
-          $("#stock-count", widget).text(stockList.urllist.length);
-        }
+        //notifyUpdate = function() {
+        //  $("#stock-count", widget).text(stockList.urllist.length);
+        //}
     }
 });
 
@@ -152,13 +192,10 @@ function removeStorage(url) {
 const SLIDEBAR_ICON = "http://github.com/kmdsbng/stockit/raw/master/img/stockit_icon.png";
 const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
 const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
-const NEW_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/new_tab.png";
-const PREF_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/pref.png";
-
 
 jetpack.slideBar.append({
     onReady: function (slide) {
-        mainModel.slideBarArea = slide.contentDocument.body;
+        mainModel.slideBarAreas.push(slide.contentDocument.body);
 
         function getTabFavicon(tab) {
             return (!tab || /^chrome:/.test(tab.favicon)) ? DEFAULT_FAVICON : tab.favicon;
@@ -311,16 +348,13 @@ jetpack.slideBar.append({
                 slideItem.addClass("focusedClosing");
             }
             slideItems.splice(index, 1);
-            slideItem.remove()
+            slideItem.remove();
         }
 
         addSlide = function (tab) {
             var slideItem = makeSlideItem(tab);
             return addSlideItem(slideItem, tab, tab.url);
         }
-
-        var newTabImage = $("#newtab img", slide.contentDocument.body);
-        newTabImage.attr("src", NEW_TAB_ICON);
 
         var slideItems = [];
 
@@ -335,14 +369,10 @@ jetpack.slideBar.append({
                 jetpack.tabs.open("about:blank").focus();
         });
 
-        $("#newtab", slide.contentDocument.body).click(function (event) {
-            jetpack.tabs.open("about:blank").focus();
-        });
-
-        $("#clear-stock", mainModel.slideBarArea).click(function(){
+        $("#clear-stock", slide.contentDocument.body).click(function(){
             stockList.urllist = [];
             clearSlide();
-            $("#stock-count", mainModel.statusBarArea).text("0");
+            notifyUpdate();
         });
 
         function resumeSlide() {
@@ -458,7 +488,7 @@ jetpack.slideBar.append({
 });
 
 // for trace method
-//Tracer.wrap(this, ['stockIt'], notify);
+//Tracer.wrap(this, ['stockIt', 'removeStorage'], notify);
 
 // use this variable to know start to use LogWindow.
 beforeStartup = false;
