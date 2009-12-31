@@ -23,17 +23,17 @@ mainModel.slideBarAreas = [];
 
 var stockList = jetpack.storage.simple;
 //var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 // Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) 
 // -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
 //var notify = function(msg) {LogWindow.log(uneval(msg));};
 var beforeStartup = true;
-//var notify = function(msg) {
-//  if (beforeStartup)
-//    jetpack.notifications.show(uneval(msg))
-//  else
-//    LogWindow.log(uneval(msg));
-//};
+var notify = function(msg) {
+  if (beforeStartup)
+    jetpack.notifications.show(uneval(msg))
+  else
+    LogWindow.log(uneval(msg));
+};
 var addSlide, clearSlide;
 
 var notifyUpdate = function() {
@@ -152,8 +152,6 @@ function stockIt() {
     notifyUpdate();
 }
 
-
-
 jetpack.menu.context.page.add({
     label: 'StockIt',
     command: function () {
@@ -169,11 +167,7 @@ html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urlli
         $("#add-stock", widget).click(function(){
             stockIt();
             notifyUpdate();
-            //$("#stock-count", widget).text(stockList.urllist.length);
         });
-        //notifyUpdate = function() {
-        //  $("#stock-count", widget).text(stockList.urllist.length);
-        //}
     }
 });
 
@@ -287,7 +281,6 @@ jetpack.slideBar.append({
             }
             return null;
         }
-
 
         function makeSlideItemInner(url, titleText, tab) {
             var slideItem = $("<div />", slide.contentDocument.body);
