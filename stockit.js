@@ -3,47 +3,6 @@
 //
 // stock pages to local storage
 
-var manifest = {
-    settings: [
-        {id:"ratio", type:"range", label:"Ratio", min: 30, max: 100, default: 50 },
-        {id:"thumbnails", type:"boolean", label:"Thumbnails?", default: true }
-    ]
-};
-
-jetpack.future.import("storage.simple");
-jetpack.future.import('menu');
-jetpack.future.import("slideBar");
-// delete this line because error occured in jetpack 0.7
-//jetpack.future.import("storage.settings");
-
-// global objects
-var mainModel = {};
-mainModel.statusBarAreas = [];
-mainModel.slideBarAreas = [];
-
-var stockList = jetpack.storage.simple;
-//var notify = function(msg) {jetpack.notifications.show(uneval(msg))};
-//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
-// Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) 
-// -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
-//var notify = function(msg) {LogWindow.log(uneval(msg));};
-var beforeStartup = true;
-var notify = function(msg) {
-  if (beforeStartup)
-    jetpack.notifications.show(uneval(msg))
-  else
-    LogWindow.log(uneval(msg));
-};
-var addSlide, clearSlide;
-
-var notifyUpdate = function() {
-  var widgets = mainModel.statusBarAreas;
-  for (var i=0; i < widgets.length; i++) {
-    var widget = widgets[i];
-    $("#stock-count", widget).text(stockList.urllist.length);
-  }
-}
-
 // LogWindow utility
 var LogWindow = {};
 LogWindow.log = (function () {
@@ -137,6 +96,264 @@ Tracer.wrap = function(receiver, methodNames, notifyMethod) {
   }
 }
 
+var manifest = {
+    settings: [
+        {id:"ratio", type:"range", label:"Ratio", min: 30, max: 100, default: 50 },
+        {id:"thumbnails", type:"boolean", label:"Thumbnails?", default: true }
+    ]
+};
+
+jetpack.future.import("storage.simple");
+jetpack.future.import('menu');
+jetpack.future.import("slideBar");
+// delete this line because error occured in jetpack 0.7
+//jetpack.future.import("storage.settings");
+
+function createModel() {
+  var model = {};
+  model.statusBarAreas = [];
+  model.slideBarAreas = [];
+  model.views = [];
+  model.clear = function() {
+    stockList.urllist = [];
+  }
+  return model;
+}
+
+function createSlideView(slide) {
+  var slideItems = [];
+
+  function getTabFavicon(tab) {
+      return (!tab || /^chrome:/.test(tab.favicon)) ? DEFAULT_FAVICON : tab.favicon;
+  }
+
+  function getTabTitle(tab) {
+      return tab.raw.label;
+  }
+
+  function fitTitle(tabTitle) {
+      if (tabTitle.length > 25) {
+          tabTitle = tabTitle.substr(0, 20);
+          tabTitle += "...";
+      }
+      return tabTitle;
+  }
+
+  function showLoadedThumbnail(slideItem, tab, imageData) {
+      var canvas = $("canvas", slideItem);
+      var img = $("img.preview", slideItem);
+      img.attr('src', imageData).show();
+      canvas.hide();
+  }
+
+  function showTabThumbnail(slideItem, tab) {
+      var canvas = $("canvas", slideItem);
+      var img = $("img.preview", slideItem);
+      var ctx = canvas[0].getContext("2d");
+      ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
+      return canvas[0].toDataURL("image/png");
+  }
+
+  function makeSlideItem(tab) {
+      return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
+  }
+
+  function resumeSlideItemByStorageItem(item) {
+      var tab = findTabByUrl(item.url)
+      var slideItem = tab ? makeSlideItem(tab)
+                          : makeSlideItemInner(item.url, item.title);
+      addSlideItem(slideItem, tab, item.url, item.image);
+  }
+
+  function addSlideItem(slideItem, tab, url, loadedImageData) {
+      slideItems.push(slideItem);
+      slideItem.appendTo($("#tabList", slide.contentDocument.body));
+      slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
+      var imageData;
+      if (loadedImageData) {
+          showLoadedThumbnail(slideItem, tab, loadedImageData);
+      } else if (tab) {
+          showTabThumbnail(slideItem, tab);
+          return getCanvasImageData(slideItem);
+      }
+  }
+
+  function getCanvasImageData(slideItem) {
+      var canvas = $("canvas", slideItem);
+      return canvas[0].toDataURL("image/png");
+  }
+
+  function findTabByUrl(url) {
+      for (var i = 0; i < jetpack.tabs.length; i++)
+          if (jetpack.tabs[i].url == url)
+              return jetpack.tabs[i];
+      return null;
+  }
+
+  function getSlideIndexByUrl(url) {
+      var finded = findSlideItemWithIndexByUrl(url);
+      return finded ? finded[1] : -1;
+  }
+
+  function findSlideItemByUrl(url) {
+      var finded = findSlideItemWithIndexByUrl(url);
+      return finded ? finded[0] : null;
+  }
+
+  function findSlideItemWithIndexByUrl(url) {
+      return findWithIndex(
+                 slideItems, 
+                 function (v) {return v.attr('url') == url;});
+  }
+
+  function findWithIndex(ary, judge) {
+      for (var i=0; i < ary.length; i++) {
+          if (judge(ary[i]))
+              return [ary[i], i];
+      }
+      return null;
+  }
+
+  function makeSlideItemInner(url, titleText, tab) {
+      var slideItem = $("<div />", slide.contentDocument.body);
+      slideItem.attr('url', url);
+      slideItem.addClass("tab");
+      slideItem.click(function(event){
+          if (!$(event.target).hasClass("closeButton")) {
+              var tab = findTabByUrl(url);
+              if (tab)
+                  tab.focus();
+              else
+                  jetpack.tabs.open(url).focus();
+          }
+      })
+
+      var headerBar = $("<div />", slide.contentDocument.body);
+      headerBar.addClass("headerBar");
+      slideItem.append(headerBar);
+
+      var favicon = $("<img />", slide.contentDocument.body);
+      favicon.attr("src", getTabFavicon(tab));
+      favicon.addClass("favicon");
+      headerBar.append(favicon);
+
+      var title = $("<div />", slide.contentDocument.body);
+      title.addClass("title");
+      title.text(fitTitle(titleText));
+      headerBar.append(title);
+
+      var closeIcon = $("<img />", slide.contentDocument.body);
+      closeIcon.attr("src", CLOSE_TAB_ICON);
+      closeIcon.addClass("closeButton");
+      closeIcon.click(function () {
+          removeStorage(url);
+          notifyUpdate();
+      });
+      headerBar.append(closeIcon);
+
+      var tabPreview = slide.contentDocument.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      tabPreview.setAttribute("class", "tabPreview");
+      slideItem.append(tabPreview);
+
+      var img = $('<img class="preview" src="">', slide.contentDocument);
+      img.hide();
+      slideItem.append(img);
+
+      return slideItem;
+  }
+
+  function removeSlideByURL(url) {
+      var finded = findSlideItemWithIndexByUrl(url);
+      if (!finded)
+          return;
+      var slideItem = finded[0];
+      var index = finded[1];
+      if (slideItem.hasClass("focused")) {
+          slideItem.addClass("focusedClosing");
+      }
+      slideItems.splice(index, 1);
+      slideItem.remove();
+  }
+
+  function addItem(tab) {
+      var slideItem = makeSlideItem(tab);
+      return addSlideItem(slideItem, tab, tab.url);
+  }
+
+
+  function clear() {
+      for (var i = 0; i < slideItems.length; i++) {
+          slideItems[i].remove();
+      }
+      slideItems = [];
+  }
+
+  $("#clear-stock", slide.contentDocument.body).click(function(){
+      mainModel.clear();
+      notifyUpdate();
+      /*
+      stockList.urllist = [];
+      clear();
+      */
+  });
+
+  function _notifyUpdate() {
+    clear();
+    resumeSlide();
+  }
+
+  function resumeSlide() {
+      for (var i=0; i < stockList.urllist.length; i++) {
+          var item = stockList.urllist[i];
+          var slideItem = resumeSlideItemByStorageItem(item);
+      }
+  }
+  resumeSlide();
+  return {
+    notifyUpdate: _notifyUpdate
+  }
+}
+
+// global objects
+var mainModel = createModel();
+
+var stockList = jetpack.storage.simple;
+//var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
+// Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) 
+// -> [Exception... "Security error" code: "1000" nsresult: "0x805303e8 (NS_ERROR_DOM_SECURITY_ERR)" location: "chrome://jetpack/content/index.html -> file:///.../.../stockit/stockit.js Line: 49"]
+var beforeStartup = true;
+var notify = function(msg) {
+  if (beforeStartup)
+    jetpack.notifications.show(uneval(msg))
+  else
+    LogWindow.log(uneval(msg));
+};
+const SLIDEBAR_ICON = "http://github.com/kmdsbng/stockit/raw/master/img/stockit_icon.png";
+const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
+const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
+
+var addSlide;
+
+var notifyUpdate = function() {
+  var statusBars = mainModel.statusBarAreas;
+  for (var i=0; i < statusBars.length; i++) {
+    var widget = statusBars[i];
+    $("#stock-count", widget).text(stockList.urllist.length);
+  }
+
+  var views = mainModel.views;
+  for (var i=0; i < views.length; i++) {
+    views[i].notifyUpdate();
+  }
+}
+
+function createImageData(tab) {
+    var canvas = $("<canvas />", tab.contentDocument);
+    var ctx = canvas[0].getContext("2d");
+    ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
+    return canvas[0].toDataURL("image/png");
+}
+
 function stockIt() {
     if (!stockList.urllist) stockList.urllist = [];
     var exists = false;
@@ -146,7 +363,7 @@ function stockIt() {
     })
     if (exists) return;
     var title = $('title', jetpack.tabs.focused.contentDocument).text();
-    var imageData = addSlide(jetpack.tabs.focused);
+    var imageData = createImageData(jetpack.tabs.focused);
     var stock = {url : url, title: title, image: imageData};
     stockList.urllist.push(stock);
     notifyUpdate();
@@ -183,198 +400,9 @@ function removeStorage(url) {
     stockList.urllist = result;
 }
 
-const SLIDEBAR_ICON = "http://github.com/kmdsbng/stockit/raw/master/img/stockit_icon.png";
-const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
-const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
-
 jetpack.slideBar.append({
     onReady: function (slide) {
-        mainModel.slideBarAreas.push(slide.contentDocument.body);
-
-        function getTabFavicon(tab) {
-            return (!tab || /^chrome:/.test(tab.favicon)) ? DEFAULT_FAVICON : tab.favicon;
-        }
-
-        function getTabTitle(tab) {
-            return tab.raw.label;
-        }
-
-        function fitTitle(tabTitle) {
-            if (tabTitle.length > 25) {
-                tabTitle = tabTitle.substr(0, 20);
-                tabTitle += "...";
-            }
-            return tabTitle;
-        }
-
-        function showLoadedThumbnail(slideItem, tab, imageData) {
-            var canvas = $("canvas", slideItem);
-            var img = $("img.preview", slideItem);
-            img.attr('src', imageData).show();
-            canvas.hide();
-        }
-
-        function showTabThumbnail(slideItem, tab) {
-            var canvas = $("canvas", slideItem);
-            var img = $("img.preview", slideItem);
-            var ctx = canvas[0].getContext("2d");
-            ctx.drawWindow(tab.contentWindow, 0, 0, 500, 500, "white");
-            return canvas[0].toDataURL("image/png");
-        }
-
-        function makeSlideItem(tab) {
-            return makeSlideItemInner(tab.url, getTabTitle(tab), tab);
-        }
-
-        function resumeSlideItemByStorageItem(item) {
-            var tab = findTabByUrl(item.url)
-            var slideItem = tab ? makeSlideItem(tab)
-                                : makeSlideItemInner(item.url, item.title);
-            addSlideItem(slideItem, tab, item.url, item.image);
-        }
-
-        function addSlideItem(slideItem, tab, url, loadedImageData) {
-            slideItems.push(slideItem);
-            slideItem.appendTo($("#tabList", slide.contentDocument.body));
-            slideItem.appendTo($("#tabList", slide.contentDocument.body)).fadeIn('normal');
-            var imageData;
-            if (loadedImageData) {
-                showLoadedThumbnail(slideItem, tab, loadedImageData);
-            } else if (tab) {
-                showTabThumbnail(slideItem, tab);
-                return getCanvasImageData(slideItem);
-            }
-        }
-
-        function getCanvasImageData(slideItem) {
-            var canvas = $("canvas", slideItem);
-            return canvas[0].toDataURL("image/png");
-        }
-
-        function findTabByUrl(url) {
-            for (var i = 0; i < jetpack.tabs.length; i++)
-                if (jetpack.tabs[i].url == url)
-                    return jetpack.tabs[i];
-            return null;
-        }
-
-        function getSlideIndexByUrl(url) {
-            var finded = findSlideItemWithIndexByUrl(url);
-            return finded ? finded[1] : -1;
-        }
-
-        function findSlideItemByUrl(url) {
-            var finded = findSlideItemWithIndexByUrl(url);
-            return finded ? finded[0] : null;
-        }
-
-        function findSlideItemWithIndexByUrl(url) {
-            return findWithIndex(
-                       slideItems, 
-                       function (v) {return v.attr('url') == url;});
-        }
-
-        function findWithIndex(ary, judge) {
-            for (var i=0; i < ary.length; i++) {
-                if (judge(ary[i]))
-                    return [ary[i], i];
-            }
-            return null;
-        }
-
-        function makeSlideItemInner(url, titleText, tab) {
-            var slideItem = $("<div />", slide.contentDocument.body);
-            slideItem.attr('url', url);
-            slideItem.addClass("tab");
-            slideItem.click(function(event){
-                if (!$(event.target).hasClass("closeButton")) {
-                    var tab = findTabByUrl(url);
-                    if (tab)
-                        tab.focus();
-                    else
-                        jetpack.tabs.open(url).focus();
-                }
-            })
-
-            var headerBar = $("<div />", slide.contentDocument.body);
-            headerBar.addClass("headerBar");
-            slideItem.append(headerBar);
-
-            var favicon = $("<img />", slide.contentDocument.body);
-            favicon.attr("src", getTabFavicon(tab));
-            favicon.addClass("favicon");
-            headerBar.append(favicon);
-
-            var title = $("<div />", slide.contentDocument.body);
-            title.addClass("title");
-            title.text(fitTitle(titleText));
-            headerBar.append(title);
-
-            var closeIcon = $("<img />", slide.contentDocument.body);
-            closeIcon.attr("src", CLOSE_TAB_ICON);
-            closeIcon.addClass("closeButton");
-            closeIcon.click(function () {
-                removeStorage(url);
-                removeSlideByURL(url);
-                notifyUpdate();
-            });
-            headerBar.append(closeIcon);
-
-            var tabPreview = slide.contentDocument.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-            tabPreview.setAttribute("class", "tabPreview");
-            slideItem.append(tabPreview);
-
-            var img = $('<img class="preview" src="">', slide.contentDocument);
-            img.hide();
-            slideItem.append(img);
-
-            return slideItem;
-        }
-
-        function removeSlideByURL(url) {
-            var finded = findSlideItemWithIndexByUrl(url);
-            if (!finded)
-                return;
-            var slideItem = finded[0];
-            var index = finded[1];
-            if (slideItem.hasClass("focused")) {
-                slideItem.addClass("focusedClosing");
-            }
-            slideItems.splice(index, 1);
-            slideItem.remove();
-        }
-
-        addSlide = function (tab) {
-            var slideItem = makeSlideItem(tab);
-            return addSlideItem(slideItem, tab, tab.url);
-        }
-
-        var slideItems = [];
-
-        clearSlide = function() {
-            for (var i = 0; i < slideItems.length; i++) {
-                slideItems[i].remove();
-            }
-            slideItems = [];
-        }
-        $(slide.contentDocument).dblclick(function (event) {
-            if (event.target.localName === "HTML")
-                jetpack.tabs.open("about:blank").focus();
-        });
-
-        $("#clear-stock", slide.contentDocument.body).click(function(){
-            stockList.urllist = [];
-            clearSlide();
-            notifyUpdate();
-        });
-
-        function resumeSlide() {
-            for (var i=0; i < stockList.urllist.length; i++) {
-                var item = stockList.urllist[i];
-                var slideItem = resumeSlideItemByStorageItem(item);
-            }
-        }
-        resumeSlide();
+      mainModel.views.push(createSlideView(slide));
     },
     icon: SLIDEBAR_ICON,
     width: 270,
