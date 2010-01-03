@@ -291,10 +291,6 @@ function createSlideView(slide) {
   $("#clear-stock", slide.contentDocument.body).click(function(){
       mainModel.clear();
       notifyUpdate();
-      /*
-      stockList.urllist = [];
-      clear();
-      */
   });
 
   function _notifyUpdate() {
@@ -314,9 +310,18 @@ function createSlideView(slide) {
   }
 }
 
+function createStatusBarView(statusBar) {
+  function _notifyUpdate() {
+    $("#stock-count", statusBar).text(stockList.urllist.length);
+  }
+
+  return {
+    notifyUpdate: _notifyUpdate
+  }
+}
+
 // global objects
 var mainModel = createModel();
-
 var stockList = jetpack.storage.simple;
 //var notify = function(msg) {jetpack.tabs.focused.contentWindow.alert(msg)};
 // Don't use LogWindow on startup because cause strange error such this (on jetpack v0.7) 
@@ -332,15 +337,7 @@ const SLIDEBAR_ICON = "http://github.com/kmdsbng/stockit/raw/master/img/stockit_
 const DEFAULT_FAVICON = "http://tb4.fr/labs/jetpack/thumbtabs/favicon.png";
 const CLOSE_TAB_ICON = "http://tb4.fr/labs/jetpack/thumbtabs/close.png";
 
-var addSlide;
-
 var notifyUpdate = function() {
-  var statusBars = mainModel.statusBarAreas;
-  for (var i=0; i < statusBars.length; i++) {
-    var widget = statusBars[i];
-    $("#stock-count", widget).text(stockList.urllist.length);
-  }
-
   var views = mainModel.views;
   for (var i=0; i < views.length; i++) {
     views[i].notifyUpdate();
@@ -380,7 +377,7 @@ jetpack.statusBar.append({
 html: '<button id="add-stock">StockIt!(<span id="stock-count">'+(stockList.urllist ? stockList.urllist.length : 0)+'</span>)</button>',
     width: 90,
     onReady: function(widget) {
-        mainModel.statusBarAreas.push(widget);
+        mainModel.views.push(createStatusBarView(widget));
         $("#add-stock", widget).click(function(){
             stockIt();
             notifyUpdate();
